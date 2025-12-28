@@ -1,0 +1,7 @@
+server/node_modules/
+.env
+
+server/public/temp/
+!server/public/temp/
+server/public/temp/*
+!server/public/temp/.gitkeep
