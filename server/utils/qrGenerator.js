@@ -48,7 +48,7 @@ const generateandUploadQRCode = async (data, fileName) => {
         .png()
         .toBuffer();
 
-        const tempPath = `./temp/${fileName}.png`;
+        const tempPath = `./public/temp/${fileName}.png`;
         fs.writeFileSync(tempPath, combinedBuffer);
 
         const upload = await cloudinary.uploader.upload(tempPath, {
