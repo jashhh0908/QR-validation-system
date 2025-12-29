@@ -1,0 +1,33 @@
+import axios from 'axios';
+import Navbar from '../components/Navbar';
+
+const Dashboard = () => {
+    return (
+        <div className="w-full min-h-screen flex flex-col bg-[#050505]">
+            <Navbar />
+            <main className="flex-1 p-8 flex flex-col items-center justify-center relative">
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-150 h-150 bg-cyan-900/10 blur-[120px] rounded-full -z-10" />
+                <div className="w-full max-w-2xl bg-zinc-900/40 backdrop-blur-xl border border-white/5 rounded-[2.5rem] p-12 shadow-2xl text-center">
+                    <h2 className="text-4xl font-black text-white mb-4 tracking-tight">
+                        Welcome, <span className="text-cyan-500">Event Manager</span>
+                    </h2>
+                    <p className="text-zinc-400 text-lg mb-5 max-w-md mx-auto">
+                        Begin the CSV import process.
+                    </p>
+                    <div className='flex justify-center'>
+                        <button 
+                            className="flex items-center justify-center gap-3 px-8 py-4 bg-zinc-800/50 border border-white/10 text-white hover:bg-zinc-800 rounded-2xl transition-all font-bold text-lg active:scale-95"
+                        >
+                            <svg className="w-5 h-5 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                            </svg>
+                            Import CSV
+                        </button>
+                    </div>
+                </div>
+            </main>
+        </div>
+    );
+};
+
+export default Dashboard;  
