@@ -4,6 +4,7 @@ import Dashboard from './pages/Dashboard';
 import { Toaster } from 'react-hot-toast';
 import {Routes, Route} from 'react-router-dom';
 import Login from './pages/Login';
+import ProtectedRoute from './components/ProtectedRoute';
 axios.defaults.baseURL = "http://localhost:3000/csv";
 axios.defaults.withCredentials = true;
 
@@ -21,7 +22,12 @@ function App() {
       <Toaster position='bottom-right' toastOptions={{duration: 2000}} />
       <Routes>
         <Route path='/' element={<Login />}/>
-        <Route path='/dashboard' element={<Dashboard />}/>
+        <Route path='/dashboard' element={
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        }/>
+        <Route path="*" element={<Login />} />
 
       </Routes>
     </>
