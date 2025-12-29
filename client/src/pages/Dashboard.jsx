@@ -1,7 +1,36 @@
-import axios from 'axios';
+import toast from 'react-hot-toast';
 import Navbar from '../components/Navbar';
+import { importToDB, readParticpants } from '../services/api';
+import { useRef, useState } from 'react';
 
 const Dashboard = () => {
+    const fileInputRef = useRef(null);
+    const[isImporting, setIsImporting] = useState(false);
+    const seedData = async (event) => {
+        const file = event.target.files[0];
+        if(!file) return;
+
+        if(!file.name.endsWith('.csv')) {
+            toast.error("Please input a CSV file");
+            return;
+        }
+        setIsImporting(true)
+        const toastId = toast.loading("Importing Data...");
+        try {
+            await importToDB(file);
+            toast.success("Import Successful", { id: toastId });
+            //just to check if the import to db was actually succesful or not
+            const {data} = await readParticpants();
+            console.log("Server data: ", data.participants);
+            setIsImporting(false);
+            if(fileInputRef)
+                fileInputRef.current.value = "";
+        } catch (error) {
+            console.error("Error importing: ", error);
+            toast.error("Failed to import", { id: toastId });
+        }
+    }
+
     return (
         <div className="w-full min-h-screen flex flex-col bg-[#050505]">
             <Navbar />
@@ -15,13 +44,33 @@ const Dashboard = () => {
                         Begin the CSV import process.
                     </p>
                     <div className='flex justify-center'>
+                        <input 
+                            type='file'
+                            ref={fileInputRef}
+                            onChange={seedData}
+                            accept='.csv'
+                            className='hidden'
+                        />
                         <button 
-                            className="flex items-center justify-center gap-3 px-8 py-4 bg-zinc-800/50 border border-white/10 text-white hover:bg-zinc-800 rounded-2xl transition-all font-bold text-lg active:scale-95"
+                            onClick={() => fileInputRef.current.click()}
+                            disabled={isImporting}
+                            className={`flex items-center justify-center gap-3 px-8 py-4 bg-zinc-800/50 border border-white/10 text-white hover:bg-zinc-800 rounded-2xl transition-all font-bold text-lg active:scale-95
+                                ${isImporting ? "bg-zinc-800 text-zinc-500 cursor-not-allowed opacity-50" 
+                                : "bg-zinc-800/50 border border-white/10 text-white hover:bg-zinc-800"}`}
                         >
+                            {isImporting ? (
+                                <>
+                                    <div className="w-5 h-5 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin" />
+                                    Uploading...
+                                </>
+                            ) : (
+                            <>
                             <svg className="w-5 h-5 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                            </svg>
+                            </svg> 
                             Import CSV
+                            </>
+                            )} 
                         </button>
                     </div>
                 </div>
