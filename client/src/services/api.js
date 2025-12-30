@@ -18,7 +18,7 @@ const checkIn = async (token) => {
     return await axios.post(`/check-in/${token}`)
 }
 
-const checkOut = async () => {
+const checkOut = async (token) => {
     return await axios.post(`/check-out/${token}`)
 }
 export {
