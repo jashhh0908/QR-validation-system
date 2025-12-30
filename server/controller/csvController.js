@@ -31,46 +31,103 @@ const importData = async (req, res) => {
             .pipe(csv())
             .on("data", (data) => results.push(data))
             .on("end", async () => {
-                for (const row of results) {
-                    //field names can be different based on google form questions
-                    //"Name, Name:, Enter name:" all will be treated as separate object keys 
-                    //update accordingly based on the form
-                    const name = row.name || row.Name;
-                    const email = row.email || row.Email;
-                    const phone = row.phone || row.Phone;
-                    const branch = row.branch || row.Branch;
-                    const year = row.year || row.Year;
-                    
-                    const token = await generateUniqueToken();
+                const importTasks = results.map(async (row) => {
+                    try {
+                        const name = (row.name || row.Name).trim();
+                        const email = (row.email || row.Email).trim();
+                        const phone = (row.phone || row.Phone).trim();
+                        const branch = (row.branch || row.Branch).trim();
+                        const year = (row.year || row.Year).trim();
 
-                    const qrData = { name, email, phone, branch, year, token };
-                    const qrURL = await generateandUploadQRCode(qrData, `${name}_${token}`);
+                        const importData = async (req, res) => {
+    const filePath = req.file.path;
+    try {
+        if(!req.file)
+            return res.status(400).json({error: "Please upload a CSV File"});
+        const results = [];
+        fs.createReadStream(filePath)
+            .pipe(csv())
+            .on("data", (data) => results.push(data))
+            .on("end", async () => {
+                const importTasks = results.map(async (row) => {
+                    try {
+                        const name = (row.name || row.Name).trim();
+                        const email = (row.email || row.Email).trim();
+                        const phone = (row.phone || row.Phone).trim();
+                        const branch = (row.branch || row.Branch).trim();
+                        const year = (row.year || row.Year).trim();
 
-                    const existing = await Participant.findOne({email})
-                    if(existing) 
-                        return res.status(400).json({error: "User already exists"});
-                    await Participant.create({
-                        name: name.trim(),
-                        email: email.trim(),
-                        phone: phone.trim(),
-                        branch: branch.trim(),
-                        year: year.trim(),
-                        token,
-                        qrUrl: qrURL,
-                    });
+                        if(!email) 
+                            return { status: 'failed', reason: 'No email found' };
 
-                    const html = registrationEmailTemplate(name.trim(), qrURL, token);
-                    await mail(
-                        email.trim(),
-                        "Registration Successful",
-                        html
-                    )
-                }
+                        const existing = await Participant.findOne({ email });
+                        if(existing) {
+                            console.log(`Skipping ${email} - Already exists.`);
+                            return { status: 'skipped', email };
+                        }
+                        const token = await generateUniqueToken();
+                        const qrData = { name, email, phone, branch, year, token};
 
+                        const qrURL = await generateandUploadQRCode(qrData, `${name}_${token}`);
+                        await Participant.create({
+                            ...qrData,
+                            qrUrl: qrURL,
+                        });
+
+                        const html = registrationEmailTemplate(name, qrURL, token);
+                        mail(email, "Registration Successful", html);
+
+                        return { status: 'success', email };
+                    } catch (err) {
+                        return { status: 'error', email: row.email, message: err.message };
+                    }
+                });
+                const finalUpload = await Promise.allSettled(importTasks);
                 if(fs.existsSync(filePath)) {
                     fs.unlinkSync(filePath)
                 }
-                res.status(200).json({ message: `${results.length} participants added` });
+                const added = finalUpload.filter(r => r.value?.status === 'success').length;
+                const skipped = finalUpload.filter(r => r.value?.status === 'skipped').length;
+                console.log(`Import finished. Added: ${added}, Skipped: ${skipped}`)
+                res.status(200).json({ message: `Import finished. Added: ${added}, Skipped: ${skipped}` });
+            });
+    } catch (error) {
+        if(fs.existsSync(filePath)) 
+            fs.unlinkSync(filePath)
+        console.error("Error importing CSV:", error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+};
+                        const existing = await Participant.findOne({ email });
+                        if(existing) {
+                            console.log(`Skipping ${email} - Already exists.`);
+                            return { status: 'skipped', email };
+                        }
+                        const token = await generateUniqueToken();
+                        const qrData = { name, email, phone, branch, year, token};
+
+                        const qrURL = await generateandUploadQRCode(qrData, `${name}_${token}`);
+                        await Participant.create({
+                            ...qrData,
+                            qrUrl: qrURL,
+                        });
+
+                        const html = registrationEmailTemplate(name, qrURL, token);
+                        mail(email, "Registration Successful", html);
+
+                        return { status: 'success', email };
+                    } catch (err) {
+                        return { status: 'error', email: row.email, message: err.message };
+                    }
+                });
+                const finalUpload = await Promise.allSettled(importTasks);
+                if(fs.existsSync(filePath)) {
+                    fs.unlinkSync(filePath)
+                }
+                const added = finalUpload.filter(r => r.value?.status === 'success').length;
+                const skipped = finalUpload.filter(r => r.value?.status === 'skipped').length;
+                console.log(`Import finished. Added: ${added}, Skipped: ${skipped}`)
+                res.status(200).json({ message: `Import finished. Added: ${added}, Skipped: ${skipped}` });
             });
     } catch (error) {
         if(fs.existsSync(filePath)) 
