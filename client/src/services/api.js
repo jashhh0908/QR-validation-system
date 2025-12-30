@@ -14,7 +14,16 @@ const readParticpants = async () => {
     return await axios.get('/read');
 }
 
+const checkIn = async (token) => {
+    return await axios.post(`/check-in/${token}`)
+}
+
+const checkOut = async () => {
+    return await axios.post(`/check-out/${token}`)
+}
 export {
     importToDB,
-    readParticpants
+    readParticpants,
+    checkIn,
+    checkOut
 }

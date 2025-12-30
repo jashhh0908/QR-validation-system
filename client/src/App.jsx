@@ -5,6 +5,7 @@ import { Toaster } from 'react-hot-toast';
 import {Routes, Route} from 'react-router-dom';
 import Login from './pages/Login';
 import ProtectedRoute from './components/ProtectedRoute';
+import Scanner from './pages/Scanner';
 axios.defaults.baseURL = "http://localhost:3000/csv";
 axios.defaults.withCredentials = true;
 
@@ -25,6 +26,11 @@ function App() {
         <Route path='/dashboard' element={
           <ProtectedRoute>
             <Dashboard />
+          </ProtectedRoute>
+        }/>
+        <Route path='/scan' element={
+          <ProtectedRoute>
+            <Scanner />
           </ProtectedRoute>
         }/>
         <Route path="*" element={<Login />} />
